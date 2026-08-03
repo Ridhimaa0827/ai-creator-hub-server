@@ -1,5 +1,5 @@
 import express from "express";
-import authMiddleware from "../middleware/authMiddleware";
+import authMiddleware from "../middleware/authMiddleware.js";
 import { createOrder, verifyPayment } from "../controllers/paymentController.js";
 import { createCheckoutSession } from "../controllers/stripeController.js";
 
