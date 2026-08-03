@@ -7,7 +7,6 @@ import {
   sendOTP,
   verifyOTP,
   resetPassword,
-  verifyEmail,
 } from "../controllers/authController.js";
 const router = express.Router();
 router.post("/register", register);
@@ -16,5 +15,4 @@ router.get("/profile", authMiddleware, profile);
 router.post("/send-otp", sendOTP);
 router.post("/verify-otp", verifyOTP);
 router.post("/reset-password", resetPassword);
-router.post("/verify-email", verifyEmail);
 export default router;
