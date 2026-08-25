@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -8,6 +9,7 @@ const userSchema = new mongoose.Schema(
       minlength: 3,
       maxlength: 50,
     },
+
     email: {
       type: String,
       required: [true, "Email is required"],
@@ -15,39 +17,52 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
+
     password: {
       type: String,
-      required: [true, "Password is required"],
       minlength: 6,
     },
+
+    googleId: {
+      type: String,
+      default: null,
+    },
+
     avatar: {
       type: String,
       default: "",
     },
+
     plan: {
       type: String,
       default: "Free",
     },
+
     credits: {
       type: Number,
       default: 50,
     },
-    otp:{
+
+    otp: {
       type: String,
       default: "",
     },
+
     otpExpiry: {
       type: Date,
       default: null,
     },
+
     isVerified: {
       type: Boolean,
       default: false,
-    }, 
+    },
   },
   {
     timestamps: true,
   }
 );
+
 const User = mongoose.model("User", userSchema);
+
 export default User;

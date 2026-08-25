@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import otpGenerator from "otp-generator"
 import transporter from "../config/mail.js";
+import { OAuth2Client } from "google-auth-library";
 export const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -326,6 +327,88 @@ export const verifyEmail = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Verification failed",
+    });
+  }
+};
+
+const googleClient = new OAuth2Client(
+  process.env.GOOGLE_CLIENT_ID
+);
+
+export const googleLogin = async (req, res) => {
+  try {
+    const { credential } = req.body;
+
+    if (!credential) {
+      return res.status(400).json({
+        success: false,
+        message: "Google credential is required",
+      });
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+
+    const {
+      sub: googleId,
+      email,
+      name,
+      picture,
+    } = payload;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Google account email not found",
+      });
+    }
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      user = await User.create({
+        name: name || "Google User",
+        email,
+        googleId,
+        avatar: picture || "",
+        isVerified: true,
+        plan: "Free",
+        credits: 50,
+      });
+    } else {
+      if (!user.googleId) {
+        user.googleId = googleId;
+        user.isVerified = true;
+        await user.save();
+      }
+    }
+
+    const token = jwt.sign(
+      {
+        userId: user._id,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "7d",
+      }
+    );
+
+    return res.json({
+      success: true,
+      message: "Google login successful",
+      token,
+      user,
+    });
+  } catch (error) {
+    console.log("Google Login Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Google login failed",
     });
   }
 };
