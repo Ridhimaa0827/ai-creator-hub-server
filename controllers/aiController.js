@@ -17,7 +17,7 @@ export const chatWithAI = async (req, res) => {
         message: "User not found",
       });
     }
-    if (user.credits <= 0) {
+    if (user.plan !== "Pro" && user.credits <= 0) {
       return res.status(400).json({
         success: false,
         message: "No credits left. Upgrade to Pro.",
@@ -39,7 +39,7 @@ export const chatWithAI = async (req, res) => {
           Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
           "Content-Type": "application/json",
         },
-      }
+      },
     );
     const reply = response.data.choices[0].message.content;
     await Chat.create({
@@ -47,8 +47,10 @@ export const chatWithAI = async (req, res) => {
       prompt,
       reply,
     });
-    user.credits -= 1;
-    await user.save();
+    if (user.plan !== "Pro") {
+      user.credits -= 1;
+      await user.save();
+    }
     res.status(200).json({
       success: true,
       reply,
@@ -78,7 +80,7 @@ export const generateImage = async (req, res) => {
         message: "User not found",
       });
     }
-    if (user.credits <= 0) {
+    if (user.plan !== "Pro" && user.credits <= 0) {
       return res.status(400).json({
         success: false,
         message: "No credits left. Upgrade to Pro.",
@@ -95,10 +97,10 @@ export const generateImage = async (req, res) => {
           "Content-Type": "application/json",
         },
         responseType: "arraybuffer",
-      }
+      },
     );
     const image = Buffer.from(response.data).toString("base64");
-    try{
+    try {
       console.log("USER:", req.user);
       console.log("PROMPT:", prompt);
       console.log("IMAGE SIZE:", image.length);
@@ -109,11 +111,13 @@ export const generateImage = async (req, res) => {
         image: `data:image/png;base64,${image}`,
       });
       console.log("IMAGE SAVED:", saved);
-    }catch(err){
-      console.log("SAVE ERROR:", error)
+    } catch (err) {
+      console.log("SAVE ERROR:", err);
     }
-    user.credits -= 1;
-    await user.save();
+    if (user.plan !== "Pro") {
+      user.credits -= 1;
+      await user.save();
+    }
     res.status(200).json({
       success: true,
       image: `data:image/png;base64,${image}`,
@@ -124,7 +128,7 @@ export const generateImage = async (req, res) => {
     console.log("Status:", error.response?.status);
     console.log(
       "Data:",
-      error.response?.data?.toString() || error.response?.data
+      error.response?.data?.toString() || error.response?.data,
     );
     console.log("Message:", error.message);
     console.log("======================================");
@@ -167,7 +171,7 @@ export const generateCode = async (req, res) => {
         message: "User not found",
       });
     }
-    if (user.credits <= 0) {
+    if (user.plan !== "Pro" && user.credits <= 0) {
       return res.status(400).json({
         success: false,
         message: "No credits left",
@@ -194,11 +198,13 @@ export const generateCode = async (req, res) => {
           Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
           "Content-Type": "application/json",
         },
-      }
+      },
     );
     const reply = response.data.choices[0].message.content;
-    user.credits -= 1;
-    await user.save();
+    if (user.plan !== "Pro") {
+      user.credits -= 1;
+      await user.save();
+    }
     res.json({
       success: true,
       reply,
